@@ -719,7 +719,7 @@ function Send-StarNotification {
 
     $embed = Build-DiscordEmbed `
         -Title "[$repoName] Star Added" `
-        -Description "" `
+        -Description "★" `
         -Url $repoUrl `
         -Author (Build-DiscordAuthor -Name $actor -Url $actorUrl -IconUrl $actorAvatar) `
         -Fields @()
