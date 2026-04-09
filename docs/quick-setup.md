@@ -232,3 +232,31 @@ your default branch is `main`, the variable must contain `main`, not `master`.
 
 <img width="593" height="499" alt="image" src="https://github.com/user-attachments/assets/ccea1652-d9da-4237-9e29-446ac700570d" />
 
+## Quick-Reference:
+
+* [ ] Download `cd-notify-discord.yml` + `cd-notify-discord.ps1` from the latest [Releases page](https://github.com/continuous-delphi/cd-notify-discord/releases)
+* [ ] Copy `cd-notify-discord.yml` to your repo's `/.github/workflows` folder and optionally edit to customize events
+* [ ] Copy `cd-notify-discord.ps1` to a `/source` folder in your repo (or to a directory of your choice)
+* [ ] Create a webhook in Discord for your channel and copy it to the clipboard
+* [ ] In GitHub, view `Settings` of your repo: Secrets and variables->Actions->Secrets->New repository secret
+> NAME=`CD_NOTIFY_DISCORD_WEBHOOK_URL`, Secret=`{paste your webhook}` and click `Add secret` to save
+* [ ] While still in `Settings`: Secrets and variables->Actions->Variables->New repository variable
+
+Add this variable to get notifications of a PUSH to a particular branch:
+> NAME=`CD_NOTIFY_DISCORD_PUSH_BRANCHES`, Value=`main` (or whatever your main branch name is) and click `Add variable` to save
+
+Add this variable to get notifications of a new STAR added:
+> NAME=`CD_NOTIFY_DISCORD_STAR`, Value=`enabled` and click `Add variable` to save
+
+* [ ] If you want inline release notifications, edit your `/.github/workflows/release.yml` file (or whatever it is named in your repo) and add a new Step similar to the following:
+   
+```yml
+  - name: Send release notification message to Discord
+    # uses script from: https://github.com/continuous-delphi/cd-notify-discord
+    shell: pwsh
+    env:
+      CD_NOTIFY_DISCORD_WEBHOOK_URL: ${{ secrets.CD_NOTIFY_DISCORD_WEBHOOK_URL }}
+    run: ./source/cd-notify-discord.ps1 -DirectRelease
+```
+* [ ] Verify that the path to `cd-notify-discord.ps1` as specified within `cd-notify-discord.yml` (and optionally `release.yml`) matches the location you saved that script file.
+* [ ] Commit the changes above and then add a star to your repo and you should get a notification in Discord within a few minutes
