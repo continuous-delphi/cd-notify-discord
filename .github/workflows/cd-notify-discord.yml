@@ -19,10 +19,17 @@ name: Notify Discord of GitHub Activity (`cd-notify-discord` from Continous-Delp
 # -----------------------------------------------------------------------------
 #
 on:
+  #enable PUSH for commits
   push:
-  create:
+
+  #enable CREATE for branches/tags
+  #create:
+
+  #enable RELEASE for new releases with types of: published
   #release:
   #  types: [published]
+
+  #enable WATCH for stars
   watch:
 
 jobs:

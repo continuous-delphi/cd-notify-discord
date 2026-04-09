@@ -29,7 +29,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference  = 'Stop'
 $InformationPreference  = 'Continue'
 
-$script:ToolVersion = '0.6.1'
+$script:ToolVersion = '0.6.2'
 
 function Write-ActivityLog {
 <#
@@ -533,7 +533,7 @@ function Send-PushNotification {
 
     Send-DiscordMessage `
         -WebhookUrl $WebhookUrl `
-        -Content "GitHub activity: push in $repoName" `
+        -Content "GITHUB: push in $repoName" `
         -Embed $embed
 }
 
@@ -609,7 +609,7 @@ function Send-CreateNotification {
 
     Send-DiscordMessage `
         -WebhookUrl $WebhookUrl `
-        -Content "GitHub activity: create in $repoName" `
+        -Content "GITHUB: activity in $repoName" `
         -Embed $embed
 }
 
@@ -684,7 +684,7 @@ function Send-ReleaseNotification {
 
     Send-DiscordMessage `
         -WebhookUrl $WebhookUrl `
-        -Content "GitHub activity: release published in $repoName" `
+        -Content "GITHUB: A new release was published! $repoName" `
         -Embed $embed
 }
 
@@ -745,7 +745,7 @@ function Send-StarNotification {
 
     Send-DiscordMessage `
         -WebhookUrl $WebhookUrl `
-        -Content "GitHub activity: star event in $repoName" `
+        -Content "GITHUB: A new star added to $repoName" `
         -Embed $embed
 }
 
