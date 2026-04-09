@@ -282,6 +282,9 @@ function Build-DiscordEmbed {
     Optional array of field hashtables created by Build-DiscordField.
 .PARAMETER Timestamp
     UTC datetime to display in the embed footer. Defaults to the current UTC time.
+.PARAMETER Author
+    Optional author hashtable produced by Build-DiscordAuthor. Renders as a small
+    avatar and clickable name at the top of the embed.
 .OUTPUTS
     Hashtable representing a Discord embed object.
 #>
@@ -296,7 +299,9 @@ function Build-DiscordEmbed {
 
         [hashtable[]]$Fields = @(),
 
-        [datetime]$Timestamp = [datetime]::UtcNow
+        [datetime]$Timestamp = [datetime]::UtcNow,
+
+        [hashtable]$Author = $null
     )
 
     $embed = @{
@@ -308,6 +313,10 @@ function Build-DiscordEmbed {
 
     if (-not [string]::IsNullOrWhiteSpace($Url)) {
         $embed.url = $Url
+    }
+
+    if ($null -ne $Author) {
+        $embed.author = $Author
     }
 
     return $embed
@@ -343,6 +352,44 @@ function Build-DiscordField {
     }
 }
 
+function Build-DiscordAuthor {
+<#
+.SYNOPSIS
+    Builds a Discord embed author hashtable.
+.DESCRIPTION
+    The author block renders as a small circular avatar and a clickable name
+    at the top of the embed, above the title.
+.PARAMETER Name
+    The display name shown next to the avatar (typically a GitHub login).
+.PARAMETER Url
+    URL the name links to (typically the GitHub profile URL).
+.PARAMETER IconUrl
+    URL of the avatar image (typically the GitHub avatar URL).
+.OUTPUTS
+    Hashtable representing a Discord embed author object.
+#>
+    param(
+        [Parameter(Mandatory)]
+        [string]$Name,
+
+        [string]$Url,
+
+        [string]$IconUrl
+    )
+
+    $author = @{ name = $Name }
+
+    if (-not [string]::IsNullOrWhiteSpace($Url)) {
+        $author.url = $Url
+    }
+
+    if (-not [string]::IsNullOrWhiteSpace($IconUrl)) {
+        $author.icon_url = $IconUrl
+    }
+
+    return $author
+}
+
 function Send-DiscordMessage {
 <#
 .SYNOPSIS
@@ -356,7 +403,8 @@ function Send-DiscordMessage {
 .PARAMETER Content
     The plain-text message content shown above the embed.
 .PARAMETER Embed
-    The embed hashtable produced by Build-DiscordEmbed.
+    Optional embed hashtable produced by Build-DiscordEmbed. When omitted the
+    message is sent as plain text with no embed.
 #>
     param(
         [Parameter(Mandatory)]
@@ -365,14 +413,14 @@ function Send-DiscordMessage {
         [Parameter(Mandatory)]
         [string]$Content,
 
-        [Parameter(Mandatory)]
-        [hashtable]$Embed
+        [hashtable]$Embed = $null
     )
 
-    $payload = @{
-        content = $Content
-        embeds  = @($Embed)
-    } | ConvertTo-Json -Depth 20
+    $payload = @{ content = $Content }
+    if ($null -ne $Embed) {
+        $payload.embeds = @($Embed)
+    }
+    $payload = $payload | ConvertTo-Json -Depth 20
 
     Write-ActivityLog "Sending Discord notification..."
 
@@ -433,6 +481,8 @@ function Send-PushNotification {
 
     $repoName    = Get-SafeValue -Value $GitHubEvent.repository.full_name -Fallback 'Unknown Repository'
     $actor       = Get-SafeValue -Value $GitHubEvent.sender.login         -Fallback 'Unknown User'
+    $actorUrl    = Get-SafeValue -Value $GitHubEvent.sender.html_url      -Fallback ''
+    $actorAvatar = Get-SafeValue -Value $GitHubEvent.sender.avatar_url    -Fallback ''
     $compareUrl  = Get-SafeValue -Value $GitHubEvent.compare              -Fallback ''
     $commitCount = @($GitHubEvent.commits).Count
 
@@ -463,10 +513,10 @@ function Send-PushNotification {
         -Title "[$repoName] Push" `
         -Description ($descriptionLines -join "`n") `
         -Url $compareUrl `
+        -Author (Build-DiscordAuthor -Name $actor -Url $actorUrl -IconUrl $actorAvatar) `
         -Fields @(
             (Build-DiscordField -Name 'Repository'   -Value $repoName),
             (Build-DiscordField -Name 'Branch'       -Value "``$branchName``"),
-            (Build-DiscordField -Name 'Actor'        -Value $actor),
             (Build-DiscordField -Name 'Commit Count' -Value ([string]$commitCount))
         )
 
@@ -514,10 +564,12 @@ function Send-CreateNotification {
         return
     }
 
-    $repoName = Get-SafeValue -Value $GitHubEvent.repository.full_name -Fallback 'Unknown Repository'
-    $actor    = Get-SafeValue -Value $GitHubEvent.sender.login         -Fallback 'Unknown User'
-    $refName  = Get-SafeValue -Value $GitHubEvent.ref                  -Fallback 'Unknown'
-    $repoUrl  = Get-SafeValue -Value $GitHubEvent.repository.html_url  -Fallback ''
+    $repoName    = Get-SafeValue -Value $GitHubEvent.repository.full_name -Fallback 'Unknown Repository'
+    $actor       = Get-SafeValue -Value $GitHubEvent.sender.login         -Fallback 'Unknown User'
+    $actorUrl    = Get-SafeValue -Value $GitHubEvent.sender.html_url      -Fallback ''
+    $actorAvatar = Get-SafeValue -Value $GitHubEvent.sender.avatar_url    -Fallback ''
+    $refName     = Get-SafeValue -Value $GitHubEvent.ref                  -Fallback 'Unknown'
+    $repoUrl     = Get-SafeValue -Value $GitHubEvent.repository.html_url  -Fallback ''
 
     $title = if ($normalizedRefType -eq 'branch') {
         "[$repoName] Branch Created"
@@ -537,11 +589,11 @@ function Send-CreateNotification {
         -Title $title `
         -Description $description `
         -Url $repoUrl `
+        -Author (Build-DiscordAuthor -Name $actor -Url $actorUrl -IconUrl $actorAvatar) `
         -Fields @(
             (Build-DiscordField -Name 'Repository' -Value $repoName),
             (Build-DiscordField -Name 'Type'       -Value $normalizedRefType),
-            (Build-DiscordField -Name 'Name'       -Value "``$refName``"),
-            (Build-DiscordField -Name 'Actor'      -Value $actor)
+            (Build-DiscordField -Name 'Name'       -Value "``$refName``")
         )
 
     Send-DiscordMessage `
@@ -590,6 +642,8 @@ function Send-ReleaseNotification {
 
     $repoName    = Get-SafeValue -Value $GitHubEvent.repository.full_name -Fallback 'Unknown Repository'
     $actor       = Get-SafeValue -Value $GitHubEvent.sender.login         -Fallback 'Unknown User'
+    $actorUrl    = Get-SafeValue -Value $GitHubEvent.sender.html_url      -Fallback ''
+    $actorAvatar = Get-SafeValue -Value $GitHubEvent.sender.avatar_url    -Fallback ''
     $releaseName = Get-SafeValue -Value $GitHubEvent.release.name         -Fallback ''
     $tagName     = Get-SafeValue -Value $GitHubEvent.release.tag_name     -Fallback 'Unknown'
     $releaseUrl  = Get-SafeValue -Value $GitHubEvent.release.html_url     -Fallback ''
@@ -602,11 +656,11 @@ function Send-ReleaseNotification {
         -Title "[$repoName] Release Published" `
         -Description "Release '$releaseName' was published." `
         -Url $releaseUrl `
+        -Author (Build-DiscordAuthor -Name $actor -Url $actorUrl -IconUrl $actorAvatar) `
         -Fields @(
             (Build-DiscordField -Name 'Repository' -Value $repoName),
             (Build-DiscordField -Name 'Release'    -Value $releaseName),
-            (Build-DiscordField -Name 'Tag'        -Value "``$tagName``"),
-            (Build-DiscordField -Name 'Actor'      -Value $actor)
+            (Build-DiscordField -Name 'Tag'        -Value "``$tagName``")
         )
 
     Send-DiscordMessage `
@@ -657,22 +711,18 @@ function Send-StarNotification {
         return
     }
 
-    $repoName = Get-SafeValue -Value $GitHubEvent.repository.full_name -Fallback 'Unknown Repository'
-    $actor    = Get-SafeValue -Value $GitHubEvent.sender.login         -Fallback 'Unknown User'
-    $repoUrl  = Get-SafeValue -Value $GitHubEvent.repository.html_url  -Fallback ''
-
-    $title       = "[$repoName] Star Added"
-    $description = "'$actor' starred the repository."
+    $repoName    = Get-SafeValue -Value $GitHubEvent.repository.full_name -Fallback 'Unknown Repository'
+    $actor       = Get-SafeValue -Value $GitHubEvent.sender.login         -Fallback 'Unknown User'
+    $actorUrl    = Get-SafeValue -Value $GitHubEvent.sender.html_url      -Fallback ''
+    $actorAvatar = Get-SafeValue -Value $GitHubEvent.sender.avatar_url    -Fallback ''
+    $repoUrl     = Get-SafeValue -Value $GitHubEvent.repository.html_url  -Fallback ''
 
     $embed = Build-DiscordEmbed `
-        -Title $title `
-        -Description $description `
+        -Title "[$repoName] Star Added" `
+        -Description "starred the repository." `
         -Url $repoUrl `
-        -Fields @(
-            (Build-DiscordField -Name 'Repository' -Value $repoName),
-            (Build-DiscordField -Name 'Action'     -Value $normalizedAction),
-            (Build-DiscordField -Name 'User'       -Value $actor)
-        )
+        -Author (Build-DiscordAuthor -Name $actor -Url $actorUrl -IconUrl $actorAvatar) `
+        -Fields @()
 
     Send-DiscordMessage `
         -WebhookUrl $WebhookUrl `
