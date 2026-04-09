@@ -2,6 +2,11 @@
 
 ![cd-notify-discord logo](/assets/cd-notify-discord-logo_350x350.png)
 
+[![CI](https://github.com/continuous-delphi/cd-notify-discord/actions/workflows/ci.yml/badge.svg)](https://github.com/continuous-delphi/cd-notify-discord/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/continuous-delphi/cd-notify-discord)
+[![Continuous Delphi](https://img.shields.io/badge/org-continuous--delphi-red)](https://github.com/continuous-delphi)
+
 A lightweight `GitHub -> Discord` notification pipeline for
 repository activity.
 
@@ -193,8 +198,20 @@ jobs:
 
 ---
 
-## Part of Continuous-Delphi
+## Maturity
 
-This tool is part of the Continuous-Delphi ecosystem.
+This repository is currently `incubator` and is under active development.
+It will graduate to `stable` once:
 
-Dedicated to the long-term success of Delphi applications.
+- At least one downstream consumer exists.
+
+Until graduation, breaking changes may occur
+
+---
+
+## Continuous-Delphi
+
+This tool is part of the [Continuous-Delphi](https://github.com/continuous-delphi)
+ecosystem, focused on strengthening Delphi's continued success
+
+![continuous-delphi logo](https://continuous-delphi.github.io/assets/logos/continuous-delphi-480x270.png)

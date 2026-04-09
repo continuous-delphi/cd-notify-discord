@@ -696,7 +696,7 @@ function Main {
         throw 'Required secret CD_NOTIFY_DISCORD_WEBHOOK_URL is not set.'
     }
 
-    if ($webhookUrl -notmatch '^https://discord\.com/api/webhooks/\d+/[A-Za-z0-9_-]+$') {
+    if ($webhookUrl -notmatch '^https://(discord\.com|discordapp\.com)/api/webhooks/\d+/[A-Za-z0-9_-]+$') {
         throw 'CD_NOTIFY_DISCORD_WEBHOOK_URL does not appear to be a valid Discord webhook URL.'
     }
 
