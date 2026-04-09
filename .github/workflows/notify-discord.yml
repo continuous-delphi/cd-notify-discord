@@ -1,0 +1,29 @@
+name: Notify Discord
+
+on:
+  push:
+  create:
+  release:
+    types: [published]
+  watch:
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Send Discord notification
+        shell: pwsh
+        env:
+          CD_NOTIFY_DISCORD_WEBHOOK_URL:    ${{ secrets.CD_NOTIFY_DISCORD_WEBHOOK_URL }}
+          CD_NOTIFY_DISCORD_PUSH_BRANCHES:  ${{ vars.CD_NOTIFY_DISCORD_PUSH_BRANCHES }}
+          CD_NOTIFY_DISCORD_CREATE:         ${{ vars.CD_NOTIFY_DISCORD_CREATE }}
+          CD_NOTIFY_DISCORD_RELEASE:        ${{ vars.CD_NOTIFY_DISCORD_RELEASE }}
+          CD_NOTIFY_DISCORD_STAR:           ${{ vars.CD_NOTIFY_DISCORD_STAR }}
+          GITHUB_EVENT_NAME:                ${{ github.event_name }}
+          GITHUB_EVENT_PATH:                ${{ github.event_path }}
+        run: |
+          ./source/send-discord-notification.ps1

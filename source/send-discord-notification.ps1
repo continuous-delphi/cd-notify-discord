@@ -1,4 +1,25 @@
 Set-StrictMode -Version Latest
+
+# -----------------------------------------------------------------------------
+# cd-notify-discord
+#
+# A PowerShell utility to send Discord notifications based on GitHub repository
+# activity such as commits, stars, releases, and branch creations
+#
+# Part of Continuous-Delphi: Focused on strengthening Delphi's continued success
+# https://github.com/continuous-delphi
+#
+# Project repository:
+# https://github.com/continuous-delphi/cd-notify-discord
+#
+# Copyright (c) 2026 Darian Miller
+# Licensed under the MIT License.
+# https://opensource.org/licenses/MIT
+# SPDX-License-Identifier: MIT
+# -----------------------------------------------------------------------------
+
+<#
+
 $ErrorActionPreference = 'Stop'
 
 function Write-Log {
