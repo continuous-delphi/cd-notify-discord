@@ -19,13 +19,16 @@ repository activity to a Discord channel using a webhook.
 
 It is designed to be:
 
-* Configuration-driven
+* configuration-driven
 * free from third-party dependencies
+* simple to use
 
 Events are configured using `Repository` or `Organization` variables
-defined under `Secrets and variables` section under `Actions` in the
-repository `Settings` page.  The required `Discord webhook` is set within the
-same area as a `repository secret`.
+that are defined under `Secrets and variables` section in Settings.
+A required `Discord webhook` is also set as a `repository secret`.
+
+See the [quick setup guide](/docs/quick-setup.md) to be up and running
+in a few minutes.
 
 ---
 
@@ -93,8 +96,6 @@ CD_NOTIFY_DISCORD_STAR=enabled
 Supported values:
 
 * `enabled`
-
-Unstars do not fire an event -- GitHub does not notify on unstar.
 
 ---
 
@@ -171,12 +172,12 @@ CD_NOTIFY_DISCORD_STAR=enabled
 ## Example Workflow
 
 ```yaml
-name: Discord Notify
-
+name: Notify Discord of GitHub Activity (`cd-notify-discord` from Continous-Delphi)
 on:
   push:
   create:
   release:
+    types: [published]
   watch:
 
 jobs:
@@ -184,36 +185,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Send notification
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Send Discord notification
         shell: pwsh
         env:
-          CD_NOTIFY_DISCORD_WEBHOOK_URL: ${{ secrets.CD_NOTIFY_DISCORD_WEBHOOK_URL }}
-          CD_NOTIFY_DISCORD_PUSH_BRANCHES: ${{ vars.CD_NOTIFY_DISCORD_PUSH_BRANCHES }}
-          CD_NOTIFY_DISCORD_CREATE: ${{ vars.CD_NOTIFY_DISCORD_CREATE }}
-          CD_NOTIFY_DISCORD_RELEASE: ${{ vars.CD_NOTIFY_DISCORD_RELEASE }}
-          CD_NOTIFY_DISCORD_STAR: ${{ vars.CD_NOTIFY_DISCORD_STAR }}
+          CD_NOTIFY_DISCORD_WEBHOOK_URL:    ${{ secrets.CD_NOTIFY_DISCORD_WEBHOOK_URL }}
+          CD_NOTIFY_DISCORD_PUSH_BRANCHES:  ${{ vars.CD_NOTIFY_DISCORD_PUSH_BRANCHES }}
+          CD_NOTIFY_DISCORD_CREATE:         ${{ vars.CD_NOTIFY_DISCORD_CREATE }}
+          CD_NOTIFY_DISCORD_RELEASE:        ${{ vars.CD_NOTIFY_DISCORD_RELEASE }}
+          CD_NOTIFY_DISCORD_STAR:           ${{ vars.CD_NOTIFY_DISCORD_STAR }}
+          GITHUB_EVENT_NAME:                ${{ github.event_name }}
+          GITHUB_EVENT_PATH:                ${{ github.event_path }}
         run: |
-          Write-Host "Notification logic goes here"
+          ./source/cd-notify-discord.ps1
 ```
-
----
-
-## Roadmap
-
-* Reusable workflow
-* GitHub Action packaging (`action.yml`)
-* Marketplace publication
-
----
-
-## Maturity
-
-This repository is currently `incubator` and is under active development.
-It will graduate to `stable` once:
-
-- At least one downstream consumer exists.
-
-Until graduation, breaking changes may occur
 
 ---
 
