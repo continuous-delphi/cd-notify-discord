@@ -3,18 +3,9 @@
 All notable changes to this project will be documented in this file.
 
 ---
-## [0.6.3] - 2026-04-09
-- Further testing of release notifications, tweaked messages sent
+## [1.0.0] - 2026-04-09
 
-## [0.6.2] - 2026-04-09
-- Further testing of release notifications, tweaked messages sent
-
-## [0.6.1] - 2026-04-09
-
-- Further testing of release notifications, back to original Github token
-with inline notification
-
-## [0.6.0] - 2026-04-09
+Initial release.
 
 - Added `-DirectRelease` parameter to `cd-notify-discord.ps1` -- allows a
   release workflow to call the script directly after creating a release,
@@ -25,29 +16,6 @@ with inline notification
 - Updated quick setup guide with two options for automated release workflows:
   inline `-DirectRelease` step (no PAT) and PAT-based approach. References
   the GitHub documentation on the `GITHUB_TOKEN` trigger restriction.
-
-## [0.5.0] - 2026-04-09
-
-- Testing release notifications
-- 
-## [0.4.0] - 2026-04-09
-
-- Using a custom release token for testing
-
-## [0.3.0] - 2026-04-09
-
-- Updated quick setup guide on requiring a PAT for release publishes
-
-## [0.2.0] - 2026-04-09
-
-- Screenshot added to settings page. 
-- Testing release notification
-
-## [0.1.0] - 2026-04-09
-
-Initial release.
-
-### Added
 
 - `send-discord-notification.ps1` -- single-file PowerShell 7 script with no
   third-party dependencies
@@ -64,7 +32,7 @@ Initial release.
 
 - **Star notifications** -- notifies when a repository is starred.
   Controlled by `CD_NOTIFY_DISCORD_STAR` with value `enabled`.
-  Note: GitHub fires the `watch` event (not `star`) with action `started`;
+  Note: GitHub fires the `watch` event with action `started`;
   there is no event for unstars.
 
 - Configuration is driven entirely through GitHub repository (or organization)
