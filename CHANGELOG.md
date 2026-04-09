@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [0.3.0] - 2026-04-09
+
+- Updated quick setup guide on requiring a PAT for release publishes
+
 ## [0.2.0] - 2026-04-09
 
 - Screenshot added to settings page. 
