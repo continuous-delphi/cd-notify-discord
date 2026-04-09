@@ -20,7 +20,7 @@ $InformationPreference  = 'Continue'
 # SPDX-License-Identifier: MIT
 # -----------------------------------------------------------------------------
 
-$script:ToolVersion = '0.4.0'
+$script:ToolVersion = '0.5.0'
 
 function Write-ActivityLog {
 <#

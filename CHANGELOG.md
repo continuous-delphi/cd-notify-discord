@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 
 ---
+## [0.5.0] - 2026-04-09
+
+- Allow for PAT delay
+- 
 ## [0.4.0] - 2026-04-09
 
 - Using a custom release token for testing
