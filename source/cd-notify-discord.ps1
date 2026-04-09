@@ -29,7 +29,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference  = 'Stop'
 $InformationPreference  = 'Continue'
 
-$script:ToolVersion = '0.6.0'
+$script:ToolVersion = '0.6.1'
 
 function Write-ActivityLog {
 <#

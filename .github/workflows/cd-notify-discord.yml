@@ -21,8 +21,8 @@ name: Notify Discord of GitHub Activity (`cd-notify-discord` from Continous-Delp
 on:
   push:
   create:
-  release:
-    types: [published]
+  #release:
+  #  types: [published]
   watch:
 
 jobs:

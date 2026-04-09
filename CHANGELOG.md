@@ -3,6 +3,11 @@
 All notable changes to this project will be documented in this file.
 
 ---
+## [0.6.1] - 2026-04-09
+
+- Further testing of release notifications, back to original Github token
+with inline notification
+
 ## [0.6.0] - 2026-04-09
 
 - Added `-DirectRelease` parameter to `cd-notify-discord.ps1` -- allows a
