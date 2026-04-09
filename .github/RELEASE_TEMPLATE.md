@@ -7,4 +7,7 @@
 This release improves `cd-notify-discord`, a `Continuous-Delphi`
 utility designed as a simple Discord notification for GitHub activity.
 
+**Direct download:** 
+* [cd-notify-discord.ps1](https://github.com/continuous-delphi/cd-notify-discord/releases/download/vX.Y.Z/cd-notify-discord.ps1)
+* [cd-notify-discord.yml](https://github.com/continuous-delphi/cd-notify-discord/releases/download/vX.Y.Z/cd-notify-discord.yml)
 ---

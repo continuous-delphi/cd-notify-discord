@@ -24,7 +24,7 @@ Initial release.
   Controlled by `CD_NOTIFY_DISCORD_RELEASE` with value `published`.
 
 - **Star notifications** -- notifies when a repository is starred.
-  Controlled by `CD_NOTIFY_DISCORD_STAR` with value `started`.
+  Controlled by `CD_NOTIFY_DISCORD_STAR` with value `enabled`.
   Note: GitHub fires the `watch` event (not `star`) with action `started`;
   there is no event for unstars.
 

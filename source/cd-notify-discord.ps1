@@ -676,9 +676,9 @@ function Send-StarNotification {
 .SYNOPSIS
     Handles a GitHub watch event (star) and sends a Discord notification if configured.
 .DESCRIPTION
-    GitHub fires the 'watch' event for star activity with action 'started'.
+    GitHub fires the 'watch' event with action 'started' when a repository is starred.
     There is no event for unstars -- GitHub does not fire the watch event on unstar.
-    CD_NOTIFY_DISCORD_STAR controls which actions are notified; only 'started' is valid.
+    Set CD_NOTIFY_DISCORD_STAR=enabled to receive star notifications.
 .PARAMETER GitHubEvent
     The parsed GitHub event payload.
 .PARAMETER WebhookUrl
@@ -692,11 +692,11 @@ function Send-StarNotification {
         [string]$WebhookUrl
     )
 
-    $allowedStarActions = @(Get-AllowedValue `
+    $starEnabled = @(Get-AllowedValue `
         -VariableName 'CD_NOTIFY_DISCORD_STAR' `
-        -SupportedValues @('started'))
+        -SupportedValues @('enabled'))
 
-    if ($allowedStarActions.Count -eq 0) {
+    if ($starEnabled.Count -eq 0) {
         Write-ActivityLog 'Star notifications are disabled.'
         return
     }
@@ -707,9 +707,9 @@ function Send-StarNotification {
         return
     }
 
-    $normalizedAction = $action.Trim().ToLowerInvariant()
-    if (-not (Test-ConfigValue -ConfiguredValues $allowedStarActions -Value $normalizedAction)) {
-        Write-ActivityLog "Star notifications are not enabled for action '$normalizedAction'. Skipping."
+    # GitHub fires the watch event with action 'started' for stars only.
+    if ($action.Trim().ToLowerInvariant() -ne 'started') {
+        Write-ActivityLog "Unexpected watch event action '$action'. Skipping."
         return
     }
 
