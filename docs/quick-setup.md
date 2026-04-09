@@ -230,4 +230,5 @@ your default branch is `main`, the variable must contain `main`, not `master`.
 
 ## Example Settings Page
 
-<img width="573" height="521" alt="image" src="https://github.com/user-attachments/assets/eb390c36-a53b-4737-a163-5619babdd06c" />
+<img width="593" height="499" alt="image" src="https://github.com/user-attachments/assets/ccea1652-d9da-4237-9e29-446ac700570d" />
+
