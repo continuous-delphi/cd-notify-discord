@@ -137,7 +137,7 @@ function Get-AllowedValue {
         [string[]]$SupportedValues
     )
 
-    $configured = Get-ConfigList -Name $VariableName
+    $configured = @(Get-ConfigList -Name $VariableName)
     if ($configured.Count -eq 0) {
         Write-ActivityLog "$VariableName is not set. Event type is disabled."
         return @()
@@ -414,7 +414,7 @@ function Send-PushNotification {
         [string]$WebhookUrl
     )
 
-    $allowedBranches = Get-ConfigList -Name 'CD_NOTIFY_DISCORD_PUSH_BRANCHES'
+    $allowedBranches = @(Get-ConfigList -Name 'CD_NOTIFY_DISCORD_PUSH_BRANCHES')
     if ($allowedBranches.Count -eq 0) {
         Write-ActivityLog 'CD_NOTIFY_DISCORD_PUSH_BRANCHES is not set. Push notifications are disabled.'
         return
@@ -493,9 +493,9 @@ function Send-CreateNotification {
         [string]$WebhookUrl
     )
 
-    $allowedCreateTypes = Get-AllowedValue `
+    $allowedCreateTypes = @(Get-AllowedValue `
         -VariableName 'CD_NOTIFY_DISCORD_CREATE' `
-        -SupportedValues @('branch', 'tag')
+        -SupportedValues @('branch', 'tag'))
 
     if ($allowedCreateTypes.Count -eq 0) {
         Write-ActivityLog 'Create notifications are disabled.'
@@ -567,9 +567,9 @@ function Send-ReleaseNotification {
         [string]$WebhookUrl
     )
 
-    $allowedReleaseActions = Get-AllowedValue `
+    $allowedReleaseActions = @(Get-AllowedValue `
         -VariableName 'CD_NOTIFY_DISCORD_RELEASE' `
-        -SupportedValues @('published')
+        -SupportedValues @('published'))
 
     if ($allowedReleaseActions.Count -eq 0) {
         Write-ActivityLog 'Release notifications are disabled.'
@@ -635,9 +635,9 @@ function Send-StarNotification {
         [string]$WebhookUrl
     )
 
-    $allowedStarActions = Get-AllowedValue `
+    $allowedStarActions = @(Get-AllowedValue `
         -VariableName 'CD_NOTIFY_DISCORD_STAR' `
-        -SupportedValues @('created', 'deleted')
+        -SupportedValues @('created', 'deleted'))
 
     if ($allowedStarActions.Count -eq 0) {
         Write-ActivityLog 'Star notifications are disabled.'
