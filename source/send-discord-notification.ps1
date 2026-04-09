@@ -618,10 +618,11 @@ function Send-ReleaseNotification {
 function Send-StarNotification {
 <#
 .SYNOPSIS
-    Handles a GitHub watch event (star/unstar) and sends a Discord notification if configured.
+    Handles a GitHub watch event (star) and sends a Discord notification if configured.
 .DESCRIPTION
-    GitHub fires the 'watch' event for star activity; the configuration variable
-    CD_NOTIFY_DISCORD_STAR controls which actions (created, deleted) are notified.
+    GitHub fires the 'watch' event for star activity with action 'started'.
+    There is no event for unstars -- GitHub does not fire the watch event on unstar.
+    CD_NOTIFY_DISCORD_STAR controls which actions are notified; only 'started' is valid.
 .PARAMETER GitHubEvent
     The parsed GitHub event payload.
 .PARAMETER WebhookUrl
@@ -637,7 +638,7 @@ function Send-StarNotification {
 
     $allowedStarActions = @(Get-AllowedValue `
         -VariableName 'CD_NOTIFY_DISCORD_STAR' `
-        -SupportedValues @('created', 'deleted'))
+        -SupportedValues @('started'))
 
     if ($allowedStarActions.Count -eq 0) {
         Write-ActivityLog 'Star notifications are disabled.'
@@ -660,19 +661,8 @@ function Send-StarNotification {
     $actor    = Get-SafeValue -Value $GitHubEvent.sender.login         -Fallback 'Unknown User'
     $repoUrl  = Get-SafeValue -Value $GitHubEvent.repository.html_url  -Fallback ''
 
-    $title = if ($normalizedAction -eq 'created') {
-        "[$repoName] Star Added"
-    }
-    else {
-        "[$repoName] Star Removed"
-    }
-
-    $description = if ($normalizedAction -eq 'created') {
-        "'$actor' starred the repository."
-    }
-    else {
-        "'$actor' removed their star from the repository."
-    }
+    $title       = "[$repoName] Star Added"
+    $description = "'$actor' starred the repository."
 
     $embed = Build-DiscordEmbed `
         -Title $title `

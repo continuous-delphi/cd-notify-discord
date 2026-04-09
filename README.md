@@ -84,16 +84,18 @@ CD_NOTIFY_DISCORD_RELEASE=published
 
 ### Star
 
-Triggered when a repository is starred or unstarred.
+Triggered when a repository is starred.
 
 ```text
-CD_NOTIFY_DISCORD_STAR=created,deleted
+CD_NOTIFY_DISCORD_STAR=started
 ```
 
 Supported values:
 
-* `created`
-* `deleted`
+* `started`
+
+Note: GitHub uses the event name `watch` with action `started` for star activity.
+Unstars do not fire an event -- GitHub does not notify on unstar.
 
 ---
 
@@ -152,7 +154,7 @@ Examples:
 CD_NOTIFY_DISCORD_PUSH_BRANCHES=main
 CD_NOTIFY_DISCORD_CREATE=branch,tag
 CD_NOTIFY_DISCORD_RELEASE=published
-CD_NOTIFY_DISCORD_STAR=created
+CD_NOTIFY_DISCORD_STAR=started
 ```
 
 ---
