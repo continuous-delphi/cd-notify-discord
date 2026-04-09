@@ -14,7 +14,7 @@ Describe 'PSScriptAnalyzer tests \' {
     Import-Module PSScriptAnalyzer -Force
 
     $repoRoot     = (Resolve-Path (Join-Path $PSScriptRoot '../../')).Path
-    $scriptPath   = Join-Path $repoRoot 'source' 'send-discord-notification.ps1'
+    $scriptPath   = Join-Path $repoRoot 'source' 'cd-notify-discord.ps1'
 
     $script:Findings = Invoke-ScriptAnalyzer `
       -Path $scriptPath `

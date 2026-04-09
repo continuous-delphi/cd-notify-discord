@@ -26,4 +26,4 @@ jobs:
           GITHUB_EVENT_NAME:                ${{ github.event_name }}
           GITHUB_EVENT_PATH:                ${{ github.event_path }}
         run: |
-          ./source/send-discord-notification.ps1
+          ./source/cd-notify-discord.ps1

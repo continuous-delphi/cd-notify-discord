@@ -8,7 +8,7 @@
 #
 # The script validates preconditions before touching git:
 #   - Version argument matches X.Y.Z semver format
-#   - $script:ToolVersion in send-discord-notification.ps1 matches the Version argument
+#   - $script:ToolVersion in cd-notify-discord.ps1 matches the Version argument
 #   - CHANGELOG.md has an entry for the version
 #   - Working tree is clean (no uncommitted changes)
 #   - Current branch matches the default branch on origin
@@ -37,7 +37,7 @@ $ErrorActionPreference = 'Stop'
 
 if ($ShowVersion) {
   $repoRoot   = (Resolve-Path -Path (Join-Path -Path $PSScriptRoot -ChildPath '..')).Path
-  $scriptFile = Join-Path $repoRoot 'source' 'send-discord-notification.ps1'
+  $scriptFile = Join-Path $repoRoot 'source' 'cd-notify-discord.ps1'
   $content    = Get-Content -LiteralPath $scriptFile -Raw
   if ($content -match '\$script:ToolVersion\s*=\s*''([^'']+)''') {
     Write-Host $Matches[1]
@@ -82,7 +82,7 @@ function Invoke-Git {
 # ---------------------------------------------------------------------------
 
 $repoRoot      = (Resolve-Path -Path (Join-Path -Path $PSScriptRoot -ChildPath '..')).Path
-$scriptFile    = Join-Path $repoRoot 'source' 'send-discord-notification.ps1'
+$scriptFile    = Join-Path $repoRoot 'source' 'cd-notify-discord.ps1'
 $changelogFile = Join-Path $repoRoot 'CHANGELOG.md'
 $tag           = "v$Version"
 
@@ -106,12 +106,12 @@ if (-not (Test-Path -LiteralPath $scriptFile)) {
 
 $scriptContent = Get-Content -LiteralPath $scriptFile -Raw
 if ($scriptContent -notmatch '\$script:ToolVersion\s*=\s*''([^'']+)''') {
-  Fail "Could not find '`$script:ToolVersion = ''...''' in send-discord-notification.ps1."
+  Fail "Could not find '`$script:ToolVersion = ''...''' in cd-notify-discord.ps1."
 }
 
 $scriptVersion = $Matches[1]
 if ($scriptVersion -ne $Version) {
-  Fail "`$script:ToolVersion in send-discord-notification.ps1 is '$scriptVersion' but -Version arg is '$Version'.`n       Update `$script:ToolVersion in the script and commit before tagging."
+  Fail "`$script:ToolVersion in cd-notify-discord.ps1 is '$scriptVersion' but -Version arg is '$Version'.`n       Update `$script:ToolVersion in the script and commit before tagging."
 }
 
 Write-Ok "script version matches ($scriptVersion)"
