@@ -1,4 +1,4 @@
-Set-StrictMode -Version Latest
+﻿Set-StrictMode -Version Latest
 $ErrorActionPreference  = 'Stop'
 $InformationPreference  = 'Continue'
 
@@ -19,6 +19,8 @@ $InformationPreference  = 'Continue'
 # https://opensource.org/licenses/MIT
 # SPDX-License-Identifier: MIT
 # -----------------------------------------------------------------------------
+
+$script:ToolVersion = '0.1.0'
 
 function Write-ActivityLog {
 <#
