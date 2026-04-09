@@ -97,7 +97,7 @@ Supported values:
 
 * `enabled`
 
-<img width="536" height="206" alt="image" src="https://github.com/user-attachments/assets/5550abff-5cbf-4aab-891a-b954f9e80fb6" />
+<img width="496" height="160" alt="image" src="https://github.com/user-attachments/assets/5e106527-9e33-4f2b-8f96-bab3402068ba" />
 
 
 ---
