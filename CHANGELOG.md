@@ -3,6 +3,9 @@
 All notable changes to this project will be documented in this file.
 
 ---
+## [0.6.3] - 2026-04-09
+- Further testing of release notifications, tweaked messages sent
+
 ## [0.6.2] - 2026-04-09
 - Further testing of release notifications, tweaked messages sent
 
