@@ -16,7 +16,7 @@ Get GitHub activity posting to a Discord channel in about 5 minutes.
 1. In Discord, right-click the channel you want notifications posted to
 2. Select **Edit Channel**
 3. Go to **Integrations** -> **Webhooks** -> **New Webhook**
-4. Give the webhook a recognizable name (e.g. `cd-notify-discord`) so you
+4. Give the webhook a recognizable name (e.g. `cd-notify-fromgithub`) so you
    know what it is later
 5. Click **Copy Webhook URL** -- keep this somewhere safe
 
