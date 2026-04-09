@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [0.2.0] - 2026-04-09
+
+- Screenshot added to settings page. 
+- Testing release notification
+
 ## [0.1.0] - 2026-04-09
 
 Initial release.
