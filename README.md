@@ -97,6 +97,9 @@ Supported values:
 
 * `enabled`
 
+<img width="536" height="206" alt="image" src="https://github.com/user-attachments/assets/5550abff-5cbf-4aab-891a-b954f9e80fb6" />
+
+
 ---
 
 ## Configuration
