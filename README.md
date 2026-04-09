@@ -1,5 +1,7 @@
 # cd-notify-discord
 
+![cd-notify-discord logo](/assets/cd-notify-discord-logo_350x350.png)
+
 A lightweight `GitHub -> Discord` notification pipeline for
 repository activity.
 
