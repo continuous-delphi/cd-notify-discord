@@ -170,3 +170,9 @@ update the secret.
 The branch name in `CD_NOTIFY_DISCORD_PUSH_BRANCHES` must exactly match
 the branch being pushed to (comparison is case-insensitive). Example: if
 your default branch is `main`, the variable must contain `main`, not `master`.
+
+
+
+## Example Settings Page
+
+<img width="573" height="521" alt="image" src="https://github.com/user-attachments/assets/eb390c36-a53b-4737-a163-5619babdd06c" />
