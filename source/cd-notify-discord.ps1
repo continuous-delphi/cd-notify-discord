@@ -1,8 +1,4 @@
-﻿Set-StrictMode -Version Latest
-$ErrorActionPreference  = 'Stop'
-$InformationPreference  = 'Continue'
-
-# -----------------------------------------------------------------------------
+﻿# -----------------------------------------------------------------------------
 # cd-notify-discord
 #
 # A PowerShell utility to send Discord notifications based on GitHub repository
@@ -20,7 +16,20 @@ $InformationPreference  = 'Continue'
 # SPDX-License-Identifier: MIT
 # -----------------------------------------------------------------------------
 
-$script:ToolVersion = '0.5.0'
+param(
+    # When set, skips GitHub event routing and sends a release published
+    # notification directly using standard GitHub Actions environment variables
+    # (GITHUB_ACTOR, GITHUB_REPOSITORY, GITHUB_REF_NAME).  Intended for use
+    # in release workflows where the release event cannot trigger a separate
+    # workflow run due to the GITHUB_TOKEN anti-recursion restriction.
+    [switch]$DirectRelease
+)
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference  = 'Stop'
+$InformationPreference  = 'Continue'
+
+$script:ToolVersion = '0.6.0'
 
 function Write-ActivityLog {
 <#
@@ -612,34 +621,42 @@ function Send-ReleaseNotification {
     The parsed GitHub event payload.
 .PARAMETER WebhookUrl
     The Discord webhook URL to post to.
+.PARAMETER SkipConfigCheck
+    When set, bypasses the CD_NOTIFY_DISCORD_RELEASE variable check and sends
+    unconditionally.  Used by the -DirectRelease script mode where the caller
+    has already opted in by adding the step to their workflow.
 #>
     param(
         [Parameter(Mandatory)]
         [pscustomobject]$GitHubEvent,
 
         [Parameter(Mandatory)]
-        [string]$WebhookUrl
+        [string]$WebhookUrl,
+
+        [switch]$SkipConfigCheck
     )
 
-    $allowedReleaseActions = @(Get-AllowedValue `
-        -VariableName 'CD_NOTIFY_DISCORD_RELEASE' `
-        -SupportedValues @('published'))
+    if (-not $SkipConfigCheck) {
+        $allowedReleaseActions = @(Get-AllowedValue `
+            -VariableName 'CD_NOTIFY_DISCORD_RELEASE' `
+            -SupportedValues @('published'))
 
-    if ($allowedReleaseActions.Count -eq 0) {
-        Write-ActivityLog 'Release notifications are disabled.'
-        return
-    }
+        if ($allowedReleaseActions.Count -eq 0) {
+            Write-ActivityLog 'Release notifications are disabled.'
+            return
+        }
 
-    $action = Get-SafeValue -Value $GitHubEvent.action -Fallback ''
-    if ([string]::IsNullOrWhiteSpace($action)) {
-        Write-ActivityLog 'Release event did not include action. Skipping.'
-        return
-    }
+        $action = Get-SafeValue -Value $GitHubEvent.action -Fallback ''
+        if ([string]::IsNullOrWhiteSpace($action)) {
+            Write-ActivityLog 'Release event did not include action. Skipping.'
+            return
+        }
 
-    $normalizedAction = $action.Trim().ToLowerInvariant()
-    if (-not (Test-ConfigValue -ConfiguredValues $allowedReleaseActions -Value $normalizedAction)) {
-        Write-ActivityLog "Release notifications are not enabled for action '$normalizedAction'. Skipping."
-        return
+        $normalizedAction = $action.Trim().ToLowerInvariant()
+        if (-not (Test-ConfigValue -ConfiguredValues $allowedReleaseActions -Value $normalizedAction)) {
+            Write-ActivityLog "Release notifications are not enabled for action '$normalizedAction'. Skipping."
+            return
+        }
     }
 
     $repoName    = Get-SafeValue -Value $GitHubEvent.repository.full_name -Fallback 'Unknown Repository'
@@ -733,6 +750,8 @@ function Send-StarNotification {
 }
 
 function Main {
+    param([switch]$DirectRelease)
+
     $webhookUrl = Get-EnvValue -Name 'CD_NOTIFY_DISCORD_WEBHOOK_URL'
     if ([string]::IsNullOrWhiteSpace($webhookUrl)) {
         throw 'Required secret CD_NOTIFY_DISCORD_WEBHOOK_URL is not set.'
@@ -740,6 +759,35 @@ function Main {
 
     if ($webhookUrl -notmatch '^https://(discord\.com|discordapp\.com)/api/webhooks/\d+/[A-Za-z0-9_-]+$') {
         throw 'CD_NOTIFY_DISCORD_WEBHOOK_URL does not appear to be a valid Discord webhook URL.'
+    }
+
+    if ($DirectRelease) {
+        Write-ActivityLog 'Direct release mode: building notification from GitHub Actions environment.'
+
+        $actor   = Get-SafeValue -Value (Get-EnvValue -Name 'GITHUB_ACTOR')      -Fallback 'Unknown'
+        $repo    = Get-SafeValue -Value (Get-EnvValue -Name 'GITHUB_REPOSITORY') -Fallback 'Unknown'
+        $tagName = Get-SafeValue -Value (Get-EnvValue -Name 'GITHUB_REF_NAME')   -Fallback 'Unknown'
+
+        $syntheticEvent = [pscustomobject]@{
+            action     = 'published'
+            release    = [pscustomobject]@{
+                name     = ''
+                tag_name = $tagName
+                html_url = "https://github.com/$repo/releases/tag/$tagName"
+            }
+            sender     = [pscustomobject]@{
+                login      = $actor
+                html_url   = "https://github.com/$actor"
+                avatar_url = "https://github.com/$actor.png"
+            }
+            repository = [pscustomobject]@{
+                full_name = $repo
+                html_url  = "https://github.com/$repo"
+            }
+        }
+
+        Send-ReleaseNotification -GitHubEvent $syntheticEvent -WebhookUrl $webhookUrl -SkipConfigCheck
+        return
     }
 
     $eventName = Get-EnvValue -Name 'GITHUB_EVENT_NAME'
@@ -780,4 +828,4 @@ function Main {
     }
 }
 
-Main
+Main -DirectRelease:$DirectRelease

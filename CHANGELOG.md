@@ -3,9 +3,21 @@
 All notable changes to this project will be documented in this file.
 
 ---
+## [0.6.0] - 2026-04-09
+
+- Added `-DirectRelease` parameter to `cd-notify-discord.ps1` -- allows a
+  release workflow to call the script directly after creating a release,
+  bypassing the GitHub `GITHUB_TOKEN` anti-recursion limitation without
+  requiring a PAT. No `CD_NOTIFY_DISCORD_RELEASE` variable needed when using
+  this mode.
+
+- Updated quick setup guide with two options for automated release workflows:
+  inline `-DirectRelease` step (no PAT) and PAT-based approach. References
+  the GitHub documentation on the `GITHUB_TOKEN` trigger restriction.
+
 ## [0.5.0] - 2026-04-09
 
-- Allow for PAT delay
+- Testing release notifications
 - 
 ## [0.4.0] - 2026-04-09
 
