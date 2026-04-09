@@ -34,8 +34,15 @@ same area as a `repository secret`.
 The following GitHub activities are currently supported.
 More may be added later by request.
 
+* Push (commits)
+* Create (branch / tag)
+* Release (publish)
+* Star (created/deleted)
+
 Each event is enabled and configured via a named variable as defined below.  
 `{variable name}={allowed values}`
+
+  
 
 ### Push (commits)
 
