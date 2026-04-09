@@ -1,4 +1,6 @@
 Set-StrictMode -Version Latest
+$ErrorActionPreference  = 'Stop'
+$InformationPreference  = 'Continue'
 
 # -----------------------------------------------------------------------------
 # cd-notify-discord
@@ -18,14 +20,10 @@ Set-StrictMode -Version Latest
 # SPDX-License-Identifier: MIT
 # -----------------------------------------------------------------------------
 
-<#
-
-$ErrorActionPreference = 'Stop'
-
-function Write-Log {
+function Write-ActivityLog {
 <#
 .SYNOPSIS
-    Writes a prefixed log message to the host.
+    Writes a prefixed log message to the information stream.
 .PARAMETER Message
     The message to log.
 #>
@@ -34,7 +32,7 @@ function Write-Log {
         [string]$Message
     )
 
-    Write-Host "[cd-notify-discord] $Message"
+    Write-Information "[cd-notify-discord] $Message"
 }
 
 function Get-EnvValue {
@@ -116,7 +114,7 @@ function Test-ConfigValue {
     return $ConfiguredValues -contains $normalized
 }
 
-function Get-AllowedValues {
+function Get-AllowedValue {
 <#
 .SYNOPSIS
     Returns the intersection of configured values and supported values for a variable.
@@ -141,7 +139,7 @@ function Get-AllowedValues {
 
     $configured = Get-ConfigList -Name $VariableName
     if ($configured.Count -eq 0) {
-        Write-Log "$VariableName is not set. Event type is disabled."
+        Write-ActivityLog "$VariableName is not set. Event type is disabled."
         return @()
     }
 
@@ -158,7 +156,7 @@ function Get-AllowedValues {
     }
 
     if ($unknown.Count -gt 0) {
-        Write-Log "Ignoring unsupported value(s) for ${VariableName}: $($unknown -join ', ')"
+        Write-ActivityLog "Ignoring unsupported value(s) for ${VariableName}: $($unknown -join ', ')"
     }
 
     return @($allowed)
@@ -270,7 +268,7 @@ function Get-RefNameFromFullRef {
     return $Ref
 }
 
-function New-DiscordEmbed {
+function Build-DiscordEmbed {
 <#
 .SYNOPSIS
     Builds a Discord embed hashtable for use with the webhook API.
@@ -281,7 +279,7 @@ function New-DiscordEmbed {
 .PARAMETER Url
     Optional URL that the title links to.
 .PARAMETER Fields
-    Optional array of field hashtables created by New-DiscordField.
+    Optional array of field hashtables created by Build-DiscordField.
 .PARAMETER Timestamp
     UTC datetime to display in the embed footer. Defaults to the current UTC time.
 .OUTPUTS
@@ -315,7 +313,7 @@ function New-DiscordEmbed {
     return $embed
 }
 
-function New-DiscordField {
+function Build-DiscordField {
 <#
 .SYNOPSIS
     Builds a Discord embed field hashtable.
@@ -358,7 +356,7 @@ function Send-DiscordMessage {
 .PARAMETER Content
     The plain-text message content shown above the embed.
 .PARAMETER Embed
-    The embed hashtable produced by New-DiscordEmbed.
+    The embed hashtable produced by Build-DiscordEmbed.
 #>
     param(
         [Parameter(Mandatory)]
@@ -376,7 +374,7 @@ function Send-DiscordMessage {
         embeds  = @($Embed)
     } | ConvertTo-Json -Depth 20
 
-    Write-Log "Sending Discord notification..."
+    Write-ActivityLog "Sending Discord notification..."
 
     $maxRetries = 3
     $attempt    = 0
@@ -385,7 +383,7 @@ function Send-DiscordMessage {
         $attempt++
         try {
             Invoke-RestMethod -Uri $WebhookUrl -Method Post -ContentType 'application/json' -Body $payload | Out-Null
-            Write-Log "Discord notification sent successfully."
+            Write-ActivityLog "Discord notification sent successfully."
             return
         }
         catch {
@@ -393,24 +391,24 @@ function Send-DiscordMessage {
                 throw
             }
             $waitSeconds = [Math]::Pow(2, $attempt)
-            Write-Log "Discord API call failed (attempt $attempt of $maxRetries). Retrying in $waitSeconds seconds..."
+            Write-ActivityLog "Discord API call failed (attempt $attempt of $maxRetries). Retrying in $waitSeconds seconds..."
             Start-Sleep -Seconds $waitSeconds
         }
     }
 }
 
-function Handle-PushEvent {
+function Send-PushNotification {
 <#
 .SYNOPSIS
     Handles a GitHub push event and sends a Discord notification if the branch is configured.
-.PARAMETER Event
+.PARAMETER GitHubEvent
     The parsed GitHub event payload.
 .PARAMETER WebhookUrl
     The Discord webhook URL to post to.
 #>
     param(
         [Parameter(Mandatory)]
-        [pscustomobject]$Event,
+        [pscustomobject]$GitHubEvent,
 
         [Parameter(Mandatory)]
         [string]$WebhookUrl
@@ -418,29 +416,29 @@ function Handle-PushEvent {
 
     $allowedBranches = Get-ConfigList -Name 'CD_NOTIFY_DISCORD_PUSH_BRANCHES'
     if ($allowedBranches.Count -eq 0) {
-        Write-Log 'CD_NOTIFY_DISCORD_PUSH_BRANCHES is not set. Push notifications are disabled.'
+        Write-ActivityLog 'CD_NOTIFY_DISCORD_PUSH_BRANCHES is not set. Push notifications are disabled.'
         return
     }
 
-    $branchName = Get-RefNameFromFullRef -Ref (Get-SafeValue -Value $Event.ref -Fallback '')
+    $branchName = Get-RefNameFromFullRef -Ref (Get-SafeValue -Value $GitHubEvent.ref -Fallback '')
     if ([string]::IsNullOrWhiteSpace($branchName)) {
-        Write-Log 'Could not determine branch name from push event. Skipping.'
+        Write-ActivityLog 'Could not determine branch name from push event. Skipping.'
         return
     }
 
     if (-not (Test-ConfigValue -ConfiguredValues $allowedBranches -Value $branchName)) {
-        Write-Log "Branch '$branchName' is not enabled for push notifications. Skipping."
+        Write-ActivityLog "Branch '$branchName' is not enabled for push notifications. Skipping."
         return
     }
 
-    $repoName    = Get-SafeValue -Value $Event.repository.full_name -Fallback 'Unknown Repository'
-    $actor       = Get-SafeValue -Value $Event.sender.login         -Fallback 'Unknown User'
-    $compareUrl  = Get-SafeValue -Value $Event.compare              -Fallback ''
-    $commitCount = @($Event.commits).Count
+    $repoName    = Get-SafeValue -Value $GitHubEvent.repository.full_name -Fallback 'Unknown Repository'
+    $actor       = Get-SafeValue -Value $GitHubEvent.sender.login         -Fallback 'Unknown User'
+    $compareUrl  = Get-SafeValue -Value $GitHubEvent.compare              -Fallback ''
+    $commitCount = @($GitHubEvent.commits).Count
 
     $descriptionLines = @()
     if ($commitCount -eq 1) {
-        $commit   = $Event.commits[0]
+        $commit   = $GitHubEvent.commits[0]
         $shortSha = Get-ShortSha -Sha (Get-SafeValue -Value $commit.id -Fallback '')
         $message  = ((Get-SafeValue -Value $commit.message -Fallback '') -split "(`r`n|`n|`r)")[0]
         $descriptionLines += "1 commit pushed to ``$branchName``."
@@ -450,7 +448,7 @@ function Handle-PushEvent {
     elseif ($commitCount -gt 1 -and $commitCount -le 5) {
         $descriptionLines += "$commitCount commits pushed to ``$branchName``."
         $descriptionLines += ''
-        foreach ($commit in $Event.commits) {
+        foreach ($commit in $GitHubEvent.commits) {
             $shortSha = Get-ShortSha -Sha (Get-SafeValue -Value $commit.id -Fallback '')
             $message  = ((Get-SafeValue -Value $commit.message -Fallback '') -split "(`r`n|`n|`r)")[0]
             $descriptionLines += "``$shortSha`` - $message"
@@ -461,15 +459,15 @@ function Handle-PushEvent {
         $descriptionLines += 'See compare link for full details.'
     }
 
-    $embed = New-DiscordEmbed `
+    $embed = Build-DiscordEmbed `
         -Title "[$repoName] Push" `
         -Description ($descriptionLines -join "`n") `
         -Url $compareUrl `
         -Fields @(
-            (New-DiscordField -Name 'Repository'   -Value $repoName),
-            (New-DiscordField -Name 'Branch'       -Value "``$branchName``"),
-            (New-DiscordField -Name 'Actor'        -Value $actor),
-            (New-DiscordField -Name 'Commit Count' -Value ([string]$commitCount))
+            (Build-DiscordField -Name 'Repository'   -Value $repoName),
+            (Build-DiscordField -Name 'Branch'       -Value "``$branchName``"),
+            (Build-DiscordField -Name 'Actor'        -Value $actor),
+            (Build-DiscordField -Name 'Commit Count' -Value ([string]$commitCount))
         )
 
     Send-DiscordMessage `
@@ -478,48 +476,48 @@ function Handle-PushEvent {
         -Embed $embed
 }
 
-function Handle-CreateEvent {
+function Send-CreateNotification {
 <#
 .SYNOPSIS
     Handles a GitHub create event (branch or tag) and sends a Discord notification if configured.
-.PARAMETER Event
+.PARAMETER GitHubEvent
     The parsed GitHub event payload.
 .PARAMETER WebhookUrl
     The Discord webhook URL to post to.
 #>
     param(
         [Parameter(Mandatory)]
-        [pscustomobject]$Event,
+        [pscustomobject]$GitHubEvent,
 
         [Parameter(Mandatory)]
         [string]$WebhookUrl
     )
 
-    $allowedCreateTypes = Get-AllowedValues `
+    $allowedCreateTypes = Get-AllowedValue `
         -VariableName 'CD_NOTIFY_DISCORD_CREATE' `
         -SupportedValues @('branch', 'tag')
 
     if ($allowedCreateTypes.Count -eq 0) {
-        Write-Log 'Create notifications are disabled.'
+        Write-ActivityLog 'Create notifications are disabled.'
         return
     }
 
-    $refType = Get-SafeValue -Value $Event.ref_type -Fallback ''
+    $refType = Get-SafeValue -Value $GitHubEvent.ref_type -Fallback ''
     if ([string]::IsNullOrWhiteSpace($refType)) {
-        Write-Log 'Create event did not include ref_type. Skipping.'
+        Write-ActivityLog 'Create event did not include ref_type. Skipping.'
         return
     }
 
     $normalizedRefType = $refType.Trim().ToLowerInvariant()
     if (-not (Test-ConfigValue -ConfiguredValues $allowedCreateTypes -Value $normalizedRefType)) {
-        Write-Log "Create notifications are not enabled for ref_type '$normalizedRefType'. Skipping."
+        Write-ActivityLog "Create notifications are not enabled for ref_type '$normalizedRefType'. Skipping."
         return
     }
 
-    $repoName = Get-SafeValue -Value $Event.repository.full_name -Fallback 'Unknown Repository'
-    $actor    = Get-SafeValue -Value $Event.sender.login         -Fallback 'Unknown User'
-    $refName  = Get-SafeValue -Value $Event.ref                  -Fallback 'Unknown'
-    $repoUrl  = Get-SafeValue -Value $Event.repository.html_url  -Fallback ''
+    $repoName = Get-SafeValue -Value $GitHubEvent.repository.full_name -Fallback 'Unknown Repository'
+    $actor    = Get-SafeValue -Value $GitHubEvent.sender.login         -Fallback 'Unknown User'
+    $refName  = Get-SafeValue -Value $GitHubEvent.ref                  -Fallback 'Unknown'
+    $repoUrl  = Get-SafeValue -Value $GitHubEvent.repository.html_url  -Fallback ''
 
     $title = if ($normalizedRefType -eq 'branch') {
         "[$repoName] Branch Created"
@@ -535,15 +533,15 @@ function Handle-CreateEvent {
         "Tag ``$refName`` was created."
     }
 
-    $embed = New-DiscordEmbed `
+    $embed = Build-DiscordEmbed `
         -Title $title `
         -Description $description `
         -Url $repoUrl `
         -Fields @(
-            (New-DiscordField -Name 'Repository' -Value $repoName),
-            (New-DiscordField -Name 'Type'       -Value $normalizedRefType),
-            (New-DiscordField -Name 'Name'       -Value "``$refName``"),
-            (New-DiscordField -Name 'Actor'      -Value $actor)
+            (Build-DiscordField -Name 'Repository' -Value $repoName),
+            (Build-DiscordField -Name 'Type'       -Value $normalizedRefType),
+            (Build-DiscordField -Name 'Name'       -Value "``$refName``"),
+            (Build-DiscordField -Name 'Actor'      -Value $actor)
         )
 
     Send-DiscordMessage `
@@ -552,63 +550,63 @@ function Handle-CreateEvent {
         -Embed $embed
 }
 
-function Handle-ReleaseEvent {
+function Send-ReleaseNotification {
 <#
 .SYNOPSIS
     Handles a GitHub release event and sends a Discord notification if the action is configured.
-.PARAMETER Event
+.PARAMETER GitHubEvent
     The parsed GitHub event payload.
 .PARAMETER WebhookUrl
     The Discord webhook URL to post to.
 #>
     param(
         [Parameter(Mandatory)]
-        [pscustomobject]$Event,
+        [pscustomobject]$GitHubEvent,
 
         [Parameter(Mandatory)]
         [string]$WebhookUrl
     )
 
-    $allowedReleaseActions = Get-AllowedValues `
+    $allowedReleaseActions = Get-AllowedValue `
         -VariableName 'CD_NOTIFY_DISCORD_RELEASE' `
         -SupportedValues @('published')
 
     if ($allowedReleaseActions.Count -eq 0) {
-        Write-Log 'Release notifications are disabled.'
+        Write-ActivityLog 'Release notifications are disabled.'
         return
     }
 
-    $action = Get-SafeValue -Value $Event.action -Fallback ''
+    $action = Get-SafeValue -Value $GitHubEvent.action -Fallback ''
     if ([string]::IsNullOrWhiteSpace($action)) {
-        Write-Log 'Release event did not include action. Skipping.'
+        Write-ActivityLog 'Release event did not include action. Skipping.'
         return
     }
 
     $normalizedAction = $action.Trim().ToLowerInvariant()
     if (-not (Test-ConfigValue -ConfiguredValues $allowedReleaseActions -Value $normalizedAction)) {
-        Write-Log "Release notifications are not enabled for action '$normalizedAction'. Skipping."
+        Write-ActivityLog "Release notifications are not enabled for action '$normalizedAction'. Skipping."
         return
     }
 
-    $repoName    = Get-SafeValue -Value $Event.repository.full_name -Fallback 'Unknown Repository'
-    $actor       = Get-SafeValue -Value $Event.sender.login         -Fallback 'Unknown User'
-    $releaseName = Get-SafeValue -Value $Event.release.name         -Fallback ''
-    $tagName     = Get-SafeValue -Value $Event.release.tag_name     -Fallback 'Unknown'
-    $releaseUrl  = Get-SafeValue -Value $Event.release.html_url     -Fallback ''
+    $repoName    = Get-SafeValue -Value $GitHubEvent.repository.full_name -Fallback 'Unknown Repository'
+    $actor       = Get-SafeValue -Value $GitHubEvent.sender.login         -Fallback 'Unknown User'
+    $releaseName = Get-SafeValue -Value $GitHubEvent.release.name         -Fallback ''
+    $tagName     = Get-SafeValue -Value $GitHubEvent.release.tag_name     -Fallback 'Unknown'
+    $releaseUrl  = Get-SafeValue -Value $GitHubEvent.release.html_url     -Fallback ''
 
     if ([string]::IsNullOrWhiteSpace($releaseName)) {
         $releaseName = $tagName
     }
 
-    $embed = New-DiscordEmbed `
+    $embed = Build-DiscordEmbed `
         -Title "[$repoName] Release Published" `
         -Description "Release '$releaseName' was published." `
         -Url $releaseUrl `
         -Fields @(
-            (New-DiscordField -Name 'Repository' -Value $repoName),
-            (New-DiscordField -Name 'Release'    -Value $releaseName),
-            (New-DiscordField -Name 'Tag'        -Value "``$tagName``"),
-            (New-DiscordField -Name 'Actor'      -Value $actor)
+            (Build-DiscordField -Name 'Repository' -Value $repoName),
+            (Build-DiscordField -Name 'Release'    -Value $releaseName),
+            (Build-DiscordField -Name 'Tag'        -Value "``$tagName``"),
+            (Build-DiscordField -Name 'Actor'      -Value $actor)
         )
 
     Send-DiscordMessage `
@@ -617,50 +615,50 @@ function Handle-ReleaseEvent {
         -Embed $embed
 }
 
-function Handle-StarEvent {
+function Send-StarNotification {
 <#
 .SYNOPSIS
     Handles a GitHub watch event (star/unstar) and sends a Discord notification if configured.
 .DESCRIPTION
     GitHub fires the 'watch' event for star activity; the configuration variable
     CD_NOTIFY_DISCORD_STAR controls which actions (created, deleted) are notified.
-.PARAMETER Event
+.PARAMETER GitHubEvent
     The parsed GitHub event payload.
 .PARAMETER WebhookUrl
     The Discord webhook URL to post to.
 #>
     param(
         [Parameter(Mandatory)]
-        [pscustomobject]$Event,
+        [pscustomobject]$GitHubEvent,
 
         [Parameter(Mandatory)]
         [string]$WebhookUrl
     )
 
-    $allowedStarActions = Get-AllowedValues `
+    $allowedStarActions = Get-AllowedValue `
         -VariableName 'CD_NOTIFY_DISCORD_STAR' `
         -SupportedValues @('created', 'deleted')
 
     if ($allowedStarActions.Count -eq 0) {
-        Write-Log 'Star notifications are disabled.'
+        Write-ActivityLog 'Star notifications are disabled.'
         return
     }
 
-    $action = Get-SafeValue -Value $Event.action -Fallback ''
+    $action = Get-SafeValue -Value $GitHubEvent.action -Fallback ''
     if ([string]::IsNullOrWhiteSpace($action)) {
-        Write-Log 'Star event did not include action. Skipping.'
+        Write-ActivityLog 'Star event did not include action. Skipping.'
         return
     }
 
     $normalizedAction = $action.Trim().ToLowerInvariant()
     if (-not (Test-ConfigValue -ConfiguredValues $allowedStarActions -Value $normalizedAction)) {
-        Write-Log "Star notifications are not enabled for action '$normalizedAction'. Skipping."
+        Write-ActivityLog "Star notifications are not enabled for action '$normalizedAction'. Skipping."
         return
     }
 
-    $repoName = Get-SafeValue -Value $Event.repository.full_name -Fallback 'Unknown Repository'
-    $actor    = Get-SafeValue -Value $Event.sender.login         -Fallback 'Unknown User'
-    $repoUrl  = Get-SafeValue -Value $Event.repository.html_url  -Fallback ''
+    $repoName = Get-SafeValue -Value $GitHubEvent.repository.full_name -Fallback 'Unknown Repository'
+    $actor    = Get-SafeValue -Value $GitHubEvent.sender.login         -Fallback 'Unknown User'
+    $repoUrl  = Get-SafeValue -Value $GitHubEvent.repository.html_url  -Fallback ''
 
     $title = if ($normalizedAction -eq 'created') {
         "[$repoName] Star Added"
@@ -676,14 +674,14 @@ function Handle-StarEvent {
         "'$actor' removed their star from the repository."
     }
 
-    $embed = New-DiscordEmbed `
+    $embed = Build-DiscordEmbed `
         -Title $title `
         -Description $description `
         -Url $repoUrl `
         -Fields @(
-            (New-DiscordField -Name 'Repository' -Value $repoName),
-            (New-DiscordField -Name 'Action'     -Value $normalizedAction),
-            (New-DiscordField -Name 'User'       -Value $actor)
+            (Build-DiscordField -Name 'Repository' -Value $repoName),
+            (Build-DiscordField -Name 'Action'     -Value $normalizedAction),
+            (Build-DiscordField -Name 'User'       -Value $actor)
         )
 
     Send-DiscordMessage `
@@ -712,30 +710,30 @@ function Main {
         throw 'GITHUB_EVENT_PATH is not set.'
     }
 
-    Write-Log "GitHub event name: $eventName"
-    Write-Log "GitHub event path: $eventPath"
+    Write-ActivityLog "GitHub event name: $eventName"
+    Write-ActivityLog "GitHub event path: $eventPath"
 
-    $event = Get-JsonFile -Path $eventPath
+    $githubEvent = Get-JsonFile -Path $eventPath
 
     switch ($eventName.Trim().ToLowerInvariant()) {
         'push' {
-            Handle-PushEvent -Event $event -WebhookUrl $webhookUrl
+            Send-PushNotification -GitHubEvent $githubEvent -WebhookUrl $webhookUrl
         }
 
         'create' {
-            Handle-CreateEvent -Event $event -WebhookUrl $webhookUrl
+            Send-CreateNotification -GitHubEvent $githubEvent -WebhookUrl $webhookUrl
         }
 
         'release' {
-            Handle-ReleaseEvent -Event $event -WebhookUrl $webhookUrl
+            Send-ReleaseNotification -GitHubEvent $githubEvent -WebhookUrl $webhookUrl
         }
 
         'watch' {
-            Handle-StarEvent -Event $event -WebhookUrl $webhookUrl
+            Send-StarNotification -GitHubEvent $githubEvent -WebhookUrl $webhookUrl
         }
 
         default {
-            Write-Log "Unsupported event '$eventName'. No notification sent."
+            Write-ActivityLog "Unsupported event '$eventName'. No notification sent."
         }
     }
 }
