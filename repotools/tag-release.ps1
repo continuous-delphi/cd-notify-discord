@@ -37,7 +37,7 @@ $ErrorActionPreference = 'Stop'
 
 if ($ShowVersion) {
   $repoRoot   = (Resolve-Path -Path (Join-Path -Path $PSScriptRoot -ChildPath '..')).Path
-  $scriptFile = Join-Path $repoRoot 'source' 'cd-notify-discord.ps1'
+  $scriptFile = Join-Path $repoRoot 'tools' 'cd-notify-discord.ps1'
   $content    = Get-Content -LiteralPath $scriptFile -Raw
   if ($content -match '\$script:ToolVersion\s*=\s*''([^'']+)''') {
     Write-Host $Matches[1]
@@ -82,7 +82,7 @@ function Invoke-Git {
 # ---------------------------------------------------------------------------
 
 $repoRoot      = (Resolve-Path -Path (Join-Path -Path $PSScriptRoot -ChildPath '..')).Path
-$scriptFile    = Join-Path $repoRoot 'source' 'cd-notify-discord.ps1'
+$scriptFile    = Join-Path $repoRoot 'tools' 'cd-notify-discord.ps1'
 $changelogFile = Join-Path $repoRoot 'CHANGELOG.md'
 $tag           = "v$Version"
 
