@@ -3,6 +3,11 @@
 All notable changes to this project will be documented in this file.
 
 ---
+## [1.1.0] - 2026-05-13
+
+- Change repo location of `cd-notify-discord.ps1` from /source folder
+to /tools folder to match what downstream users will have
+
 ## [1.0.0] - 2026-04-09
 
 Initial release.
