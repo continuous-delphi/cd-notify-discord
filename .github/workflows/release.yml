@@ -80,10 +80,10 @@ jobs:
             --title "${REPO_NAME} v${VERSION}" \
             --notes-file release-notes.md \
             .github/workflows/cd-notify-discord.yml \
-            source/cd-notify-discord.ps1
+            tools/cd-notify-discord.ps1
 
       - name: Send release notification
         shell: pwsh
         env:
           CD_NOTIFY_DISCORD_WEBHOOK_URL: ${{ secrets.CD_NOTIFY_DISCORD_WEBHOOK_URL }}
-        run: ./source/cd-notify-discord.ps1 -DirectRelease
+        run: ./tools/cd-notify-discord.ps1 -DirectRelease
