@@ -3,6 +3,7 @@
 ![cd-notify-discord logo](/assets/cd-notify-discord-logo_350x350.png)
 
 [![CI](https://github.com/continuous-delphi/cd-notify-discord/actions/workflows/ci.yml/badge.svg)](https://github.com/continuous-delphi/cd-notify-discord/actions/workflows/ci.yml)
+[![GitHub Release](https://img.shields.io/github/v/release/continuous-delphi/cd-notify-discord?display_name=release)](https://github.com/continuous-delphi/cd-notify-discord/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/continuous-delphi/cd-notify-discord)
 [![Continuous Delphi](https://img.shields.io/badge/org-continuous--delphi-red)](https://github.com/continuous-delphi)
