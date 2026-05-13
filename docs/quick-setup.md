@@ -49,13 +49,13 @@ your-repo/
   .github/
     workflows/
       cd-notify-discord.yml    <-- workflow file goes here
-  source
+  tools
     cd-notify-discord.ps1      <-- script can go anywhere; update the
                                     workflow path if you move it
 ```
 
 By default, the workflow references the script at
-`./source/cd-notify-discord.ps1`. If you prefer a different location
+`./tools/cd-notify-discord.ps1`. If you prefer a different location
 such as `.github/scripts/`, edit the `run:` line in the workflow to match
 like this:
 
@@ -130,7 +130,7 @@ creating the release. This is the simpler option and requires no extra tokens.
   shell: pwsh
   env:
     CD_NOTIFY_DISCORD_WEBHOOK_URL: ${{ secrets.CD_NOTIFY_DISCORD_WEBHOOK_URL }}
-  run: ./source/cd-notify-discord.ps1 -DirectRelease
+  run: ./tools/cd-notify-discord.ps1 -DirectRelease
 ```
 
 Do **not** set `CD_NOTIFY_DISCORD_RELEASE` for this option -- the `-DirectRelease`
@@ -236,7 +236,7 @@ your default branch is `main`, the variable must contain `main`, not `master`.
 
 * [ ] Download `cd-notify-discord.yml` + `cd-notify-discord.ps1` from the latest [Releases page](https://github.com/continuous-delphi/cd-notify-discord/releases)
 * [ ] Copy `cd-notify-discord.yml` to your repo's `/.github/workflows` folder and optionally edit to customize events
-* [ ] Copy `cd-notify-discord.ps1` to a `/source` folder in your repo (or to a directory of your choice)
+* [ ] Copy `cd-notify-discord.ps1` to a `/tools` folder in your repo (or to a directory of your choice)
 * [ ] Create a webhook in Discord for your channel and copy it to the clipboard
 * [ ] In GitHub, view `Settings` of your repo: Secrets and variables->Actions->Secrets->New repository secret
 > NAME=`CD_NOTIFY_DISCORD_WEBHOOK_URL`, Secret=`{paste your webhook}` and click `Add secret` to save
@@ -256,7 +256,7 @@ Add this variable to get notifications of a new STAR added:
     shell: pwsh
     env:
       CD_NOTIFY_DISCORD_WEBHOOK_URL: ${{ secrets.CD_NOTIFY_DISCORD_WEBHOOK_URL }}
-    run: ./source/cd-notify-discord.ps1 -DirectRelease
+    run: ./tools/cd-notify-discord.ps1 -DirectRelease
 ```
 * [ ] Verify that the path to `cd-notify-discord.ps1` as specified within `cd-notify-discord.yml` (and optionally `release.yml`) matches the location you saved that script file.
 * [ ] Commit the changes above and then add a star to your repo and you should get a notification in Discord within a few minutes
